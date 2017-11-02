@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>The upside down</title>
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-beta/css/bootstrap-reboot.min.css">
+    <style>
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            box-sizing: border-box;
+            border: 1px solid cadetblue;
+            z-index: 1;
+        }
+        .page-wrapper {
+            padding: 5%;
+        }
+        h1 {
+            color: #c13939;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-wrapper">
+        <canvas id="the-upside-down"></canvas>
+        <h1>¡uʍop ǝpısdn ǝɥʇ oʇ ǝɯoɔlǝʍ</h1>
+    </div>
+    <script>
+
+
+        function StrangeDot(startX, startY) {
+            this.startX = startX;
+            this.startY = startY;
+            this.x = startX;
+            this.y = startY;
+            this.r = getNumBetween(1, 7);
+            this.speedX = (getNumBetween(0, 1) ? Math.random() * -1 : Math.random()) * 0.3;
+            this.speedY = (getNumBetween(0, 1) ? Math.random() * -1 : Math.random()) * 0.2;
+
+            this.createShape();
+        }
+
+        StrangeDot.prototype.createShape = function() {
+            const offsets = {
+                midX: this.r*2,
+                f1x: getNumBetween(1, this.r),
+                f1y: getNumBetween(this.r, this.r * 2),
+                f2x: getNumBetween(1, this.r),
+                f2y: getNumBetween(this.r, this.r * 2)
+            };
+
+            this.firstCurve = () => ([
+                this.x + offsets.f1x, this.y - offsets.f1y,
+                this.x + offsets.midX - offsets.f2x, this.y - offsets.f2y,
+                this.x + offsets.midX, this.y
+            ]);
+
+            this.secondCurve = () => ([
+                this.x + offsets.midX - offsets.f1x, this.y + offsets.f1y,
+                this.x, this.y + offsets.f2y,
+                this.x, this.y
+            ]);
+        };
+
+        StrangeDot.prototype.draw = function(ctx) {
+            var p = new Path2D();
+            p.lineCap = "round";
+            p.lineJoin = "round";
+            p.moveTo(this.x, this.y);
+            p.bezierCurveTo(...this.firstCurve());
+            p.bezierCurveTo(...this.secondCurve());
+
+            var gradient = ctx.createRadialGradient(this.x + this.r, this.y, this.r, this.x + this.r, this.y, 0);
+            gradient.addColorStop(0, 'rgba(255, 255, 255, 0.2)');
+            gradient.addColorStop(1, 'rgba(255, 255, 255, 0.4)');
+            ctx.fillStyle = gradient;
+            ctx.fill(p);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+            ctx.stroke(p);
+        };
+
+        function getNumBetween(min, max) {
+            if (min > max) {
+               [min, max] = [max, min];
+            }
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function clear() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'rgba(4, 15, 35, 0.88)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        const light = {
+            x: 0,
+            y: 0,
+            r: 100,
+        };
+
+        function drawLight() {
+            const { x, y, r } = light; 
+            const [centerX, centerY] = [ x - (r * .5), y - (r * .5)];
+            const circle = new Path2D();
+            circle.arc(x, y, r*.5, 0, Math.PI*2);
+
+            var gradient = ctx.createRadialGradient(x, y, r*0.2, x, y, r*1);
+            gradient.addColorStop(0, 'rgba(24, 34, 52, 1)');
+            gradient.addColorStop(0.5, 'rgba(24, 34, 52, 0.1)');
+            gradient.addColorStop(0.9, 'rgba(24, 34, 52, 1)');
+            
+            ctx.save();
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.fillStyle = gradient;
+            ctx.fill(circle);
+            ctx.restore();
+        }
+        
+        const canvas = document.querySelector("#the-upside-down");
+        const ctx = canvas.getContext("2d");
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const dots = [];
+        for (let i = 1; i <= 100; i++) {
+            dots.push(new StrangeDot(getNumBetween(0, canvas.width), getNumBetween(0, canvas.height)));
+        }
+
+        let isMouseDown = false;
+        canvas.addEventListener('mousedown', e => {
+            isMouseDown = true;
+            light.x = e.clientX;
+            light.y = e.clientY;
+        });
+        canvas.addEventListener('mouseleave', e => isMouseDown = false);
+        canvas.addEventListener('mouseup', e => isMouseDown = false);
+        canvas.addEventListener('mousemove', e => {
+            if (!isMouseDown) {
+                return;
+            }
+            light.x = e.clientX;
+            light.y = e.clientY;
+        })
+
+        function render() {
+            clear();
+            dots.forEach(dot => {
+                dot.x += dot.speedX;
+                dot.y += dot.speedY;
+
+                if (dot.x > canvas.width || dot.x < dot.r * -1) {
+                    dot.x = getNumBetween(dot.r, canvas.width);
+                    dot.y = getNumBetween(0, 1) ? dot.r : canvas.height;
+                }
+
+                if (dot.y > canvas.height || dot.y < dot.r * -1) {
+                    dot.x = getNumBetween(0, 1) ? dot.r : canvas.width;
+                    dot.y = getNumBetween(dot.r, canvas.height);
+                }
+
+                dot.draw(ctx);
+            });
+
+            if (isMouseDown) {
+                drawLight();
+            }
+            requestAnimationFrame(render);
+        }
+        requestAnimationFrame(render);
+    </script>
+</body>
+</html>
