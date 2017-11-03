@@ -161,6 +161,9 @@
 
         function render() {
             clear();
+
+            drawLight();
+
             dots.forEach(dot => {
                 dot.x += dot.speedX;
                 dot.y += dot.speedY;
@@ -178,7 +181,6 @@
                 dot.draw(ctx);
             });
            
-            drawLight();
             requestAnimationFrame(render);
         }
         
