@@ -10,6 +10,7 @@
         :root {
             cursor: none;
         }
+
         canvas {
             position: fixed;
             top: 0;
@@ -17,10 +18,19 @@
             box-sizing: border-box;
             z-index: 1;
         }
+
         body {
-            background:rgb(153, 157, 169);
+            background:rgb(153, 157, 169) 
+                url("https://vignette.wikia.nocookie.net/strangerthings8338/images/e/e0/Wiki-background.jpeg/revision/latest?cb=20170522192233")
+                no-repeat
+                center;
+            background-size: cover;
             user-select: none;
+            height: 100vh;
+            width: 100%;
+
         }
+
         .page-wrapper {
             padding: 5%;
         }
@@ -97,7 +107,7 @@
 
         function clear() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = 'rgba(10, 23, 45, 0.95)';
+            ctx.fillStyle = 'rgba(10, 23, 45, 0.8)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
 
@@ -113,14 +123,17 @@
             const circle = new Path2D();
             circle.arc(x, y, r*.5, 0, Math.PI*2);
 
-            var gradient = ctx.createRadialGradient(x, y, r*0.2, x, y, r*1);
-            gradient.addColorStop(0, 'rgba(204, 202, 184, 0.8)');
-            gradient.addColorStop(0.5, 'rgba(204, 202, 184, 0)');
-            gradient.addColorStop(0.9, 'rgba(204, 202, 184, 1)');
-            
+            const gradient = ctx.createRadialGradient(x, y, r*0.7, x, y, 0);
+            const color = [239, 237, 218];
+            gradient.addColorStop(0, `rgba(${color.join(",")}, 0)`);
+            gradient.addColorStop(0.3, `rgba(${color.join(",")}, 0.6)`);
+            gradient.addColorStop(0.7, `rgba(${color.join(",")}, 1)`);
+            gradient.addColorStop(0.71, `rgba(${color.join(",")}, 1)`);
+            gradient.addColorStop(1, `rgba(${color.join(",")}, 0.6)`);
             ctx.save();
-            ctx.globalCompositeOperation = 'destination-out';
+            ctx.globalCompositeOperation = 'xor';
             ctx.fillStyle = gradient;
+            ctx.filter = "blur(1px)";
             ctx.fill(circle);
             ctx.restore();
         }
